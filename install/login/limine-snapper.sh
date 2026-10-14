@@ -86,13 +86,21 @@ echo "mkinitcpio hooks re-enabled"
 # boot entries into /boot/limine.conf. Only fall back to limine-update if those
 # hooks didn't run for some reason — running it unconditionally rebuilds every
 # UKI a second time.
-if ! grep -q "^/+" /boot/limine.conf; then
-  sudo limine-update
-fi
+#
+# omarchy-legacy: only check Limine's boot entries when Limine is installed.
+# On systems booted by GRUB or systemd-boot there is no /boot/limine.conf, and
+# the upstream check would abort the install.
+if command -v limine &>/dev/null; then
+  if ! grep -q "^/+" /boot/limine.conf; then
+    sudo limine-update
+  fi
 
-if ! grep -q "^/+" /boot/limine.conf; then
-  echo "Error: failed to add boot entries to /boot/limine.conf" >&2
-  exit 1
+  if ! grep -q "^/+" /boot/limine.conf; then
+    echo "Error: failed to add boot entries to /boot/limine.conf" >&2
+    exit 1
+  fi
+else
+  echo "Limine not installed; skipping Limine boot entry checks (GRUB/systemd-boot setup)"
 fi
 
 if [[ -n $EFI ]] && efibootmgr &>/dev/null; then

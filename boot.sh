@@ -19,8 +19,8 @@ ansi_art='                 ▄▄▄
 clear
 echo -e "\n$ansi_art\n"
 
-# Use custom branch if instructed, otherwise default to master
-OMARCHY_REF="${OMARCHY_REF:-master}"
+# Use custom branch if instructed, otherwise default to legacy-3.8.4
+OMARCHY_REF="${OMARCHY_REF:-legacy-3.8.4}"
 
 # Set mirror based on branch
 if [[ $OMARCHY_REF == "dev" ]]; then
@@ -36,8 +36,8 @@ fi
 
 sudo pacman -Syu --noconfirm --needed git
 
-# Use custom repo if specified, otherwise default to basecamp/omarchy
-OMARCHY_REPO="${OMARCHY_REPO:-basecamp/omarchy}"
+# Use custom repo if specified, otherwise default to musabase/omarchy-legacy
+OMARCHY_REPO="${OMARCHY_REPO:-musabase/omarchy-legacy}"
 
 echo -e "\nCloning Omarchy from: https://github.com/${OMARCHY_REPO}.git"
 echo -e "\e[32mUsing branch: $OMARCHY_REF\e[0m"
