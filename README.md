@@ -3,23 +3,25 @@
 **Unofficial.** Not affiliated with, or endorsed by, Omarchy, DHH or Basecamp.
 Upstream project: [github.com/omacom/omarchy](https://github.com/omacom/omarchy) · [omarchy.org](https://omarchy.org)
 
-This repository keeps the **Omarchy 3.8.4 online installer** working on an existing Arch Linux system, so you can install Omarchy manually (for example on a separate partition, or alongside GRUB) and then upgrade to Omarchy 4 "Quattro".
+This repository keeps the **Omarchy 3.8.4 online installer** working on an existing Arch Linux system, so you can install Omarchy manually (for example on a separate partition next to Windows) and then upgrade to Omarchy 4 "Quattro".
 
 In October 2026 upstream removed its `master` branch, the `omarchy.org/install` script started returning 404, and the `omarchy-walker` package was retired. Together those broke every manual 3.x install. This repo is a snapshot of upstream tag `v3.8.4` (commit `8fcc9d6`) with the smallest set of changes needed to make it install again.
 
 > **Use this as a bridge, not a destination.** Omarchy 3.x no longer receives fixes, including security fixes. Upgrade to Omarchy 4 right after installing (see below).
 
-Full walkthrough: [musabase.com](https://www.musabase.com)
+**Full walkthrough** (Btrfs setup, the Snapper fix before upgrading, the upgrade itself, and adding Windows to Limine, with screenshots): [How to Install Omarchy 4 on a Separate Partition (Dual Boot)](https://www.musabase.com/2026/06/install-omarchy-os-manually-separate-partition.html)
+
+Tested in October 2026: Omarchy 3.8.4 from this repo, upgraded to Omarchy 4, with Windows 10 on its own disk and both booting from Limine.
 
 ## Install
 
-On a fresh Arch Linux install, logged in as your normal (non-root) user:
+On an Arch Linux install with a **Btrfs** root, logged in as your normal (non-root) user:
 
 ```bash
 curl -fsSL https://raw.githubusercontent.com/musabase/omarchy-legacy/legacy-3.8.4/boot.sh | bash
 ```
 
-The installer may warn that it requires the Limine bootloader or a Btrfs root filesystem. On a GRUB or systemd-boot system, answer **Yes** to "Proceed anyway". This repo's changes let the install finish without Limine.
+The installer warns that it requires the Limine bootloader. Answer **Yes** to "Proceed anyway". This repo's changes let the install finish without Limine, and Limine arrives later with the Omarchy 4 upgrade. Btrfs is required: the upgrade sets up Snapper, which needs it.
 
 If the install stops, choose **Retry installation** from the menu. Do not run the curl command again: it deletes `~/.local/share/omarchy` and starts over.
 
@@ -46,6 +48,14 @@ Only the **installer scripts** are frozen here. Packages still come from Omarchy
 
 ## Upgrade to Omarchy 4 (Quattro)
 
+### Before you upgrade
+
+The upgrade is one-way, so take a backup first.
+
+If `findmnt /.snapshots` prints a line, you already have a `.snapshots` subvolume, and the upgrade's Snapper setup will fail until you apply a short fix. The commands are in the [full guide](https://www.musabase.com/2026/06/install-omarchy-os-manually-separate-partition.html#prepare-quattro-upgrade).
+
+### Run the upgrade
+
 After the install finishes and you've rebooted into the Omarchy desktop, open a terminal and run the official upgrade script:
 
 ```bash
@@ -53,49 +63,16 @@ curl -fsSL https://raw.githubusercontent.com/omacom/omarchy/quattro/bin/omarchy-
 bash ~/upgrade-to-quattro
 ```
 
-The upgrade is one-way. Take a backup or a VM snapshot first.
 
-### Extra steps on GRUB systems
+### After the upgrade
 
-Do these **before** running the upgrade script:
-
-```bash
-# 1. Remove any Limine stubs you created during the install
-sudo rm -f /boot/limine.conf /usr/local/bin/limine-update /usr/local/bin/limine-mkinitcpio
-
-# 2. Skip the Limine-only "install the Omarchy kernel" migration
-#    (install linux-omarchy yourself afterwards, see below)
-sudo install -Dm644 /dev/null /var/lib/omarchy/migrations/1789325478
-
-# 3. Drop the btrfs-overlayfs initramfs hook, which only ships with Limine's packages
-sudo tee /etc/mkinitcpio.conf.d/zz-grub-no-overlayfs.conf >/dev/null <<'EOF'
-if [[ ! -e /usr/lib/initcpio/install/btrfs-overlayfs && ! -e /etc/initcpio/install/btrfs-overlayfs ]]; then
-  _grub_hooks=()
-  for _grub_hook in "${HOOKS[@]}"; do
-    [[ $_grub_hook == btrfs-overlayfs ]] || _grub_hooks+=("$_grub_hook")
-  done
-  HOOKS=("${_grub_hooks[@]}")
-  unset _grub_hooks _grub_hook
-fi
-EOF
-```
-
-When the upgrade script asks **"Reboot to complete Quattro upgrade now?"**, answer **No**, then:
+Answer **Yes** to "Reboot to complete Quattro upgrade now?". After the reboot, the Limine menu replaces GRUB. Don't run `grub-mkconfig` from here on. To add Windows to the Limine menu:
 
 ```bash
-sudo mkinitcpio -P
-sudo grub-mkconfig -o /boot/grub/grub.cfg
-reboot
+sudo limine-scan
 ```
 
-### Optional: the Omarchy kernel
-
-Omarchy 4.0.4 made its own `linux-omarchy` kernel the default. On GRUB, install it yourself once Omarchy 4 boots:
-
-```bash
-sudo pacman -S linux-omarchy linux-omarchy-headers
-sudo grub-mkconfig -o /boot/grub/grub.cfg
-```
+Pick Windows Boot Manager by its number. BitLocker notes, troubleshooting and screenshots are in the [full guide](https://www.musabase.com/2026/06/install-omarchy-os-manually-separate-partition.html#add-windows-to-limine).
 
 ## License
 
