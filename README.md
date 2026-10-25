@@ -35,12 +35,15 @@ If the install stops, choose **Retry installation** from the menu. Do not run th
 | `boot.sh` | Defaults to this repo and the `legacy-3.8.4` branch | Upstream defaulted to the deleted `master` branch. |
 | `bin/omarchy-reinstall-git` | Clones this repo instead of upstream `master` | Same reason. |
 | `README.md` | This file (the original is kept as `README.upstream.md`) | |
+| `quattro/omarchy-upgrade-to-quattro` | Added: unmodified copy of upstream's upgrade script at commit `2fca7fe` | Fallback in case the upstream script is moved or removed. |
 
-Nothing else is modified. Compare against upstream with:
+Nothing else is modified. Compare the installer changes against upstream with:
 
 ```bash
-git diff legacy-3.8.4~1 legacy-3.8.4
+git diff 4b172ef c554330
 ```
+
+(`4b172ef` is the untouched upstream v3.8.4 import, and `c554330` is the commit with the installer changes.)
 
 ## Known limitation
 
@@ -63,6 +66,12 @@ curl -fsSL https://raw.githubusercontent.com/omacom/omarchy/quattro/bin/omarchy-
 bash ~/upgrade-to-quattro
 ```
 
+If that upstream URL stops working, use the copy saved in this repo (upstream commit `2fca7fe`):
+
+```bash
+curl -fsSL https://raw.githubusercontent.com/musabase/omarchy-legacy/legacy-3.8.4/quattro/omarchy-upgrade-to-quattro -o ~/upgrade-to-quattro
+bash ~/upgrade-to-quattro
+```
 
 ### After the upgrade
 
